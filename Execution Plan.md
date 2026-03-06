@@ -2,7 +2,7 @@
 
 
 
-> [!NOTE] UNDER CONSTRUCTION
+UNDER CONSTRUCTION
 
 
 # I. GitHub Setup & Tutorial (15 min)
