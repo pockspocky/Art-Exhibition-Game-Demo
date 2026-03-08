@@ -14,3 +14,30 @@ export_credentials.cfg
 .mono/
 data_*/
 mono_crash.*.json
+
+# Kiro files
+.kiro/
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE configs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Build artifacts
+dist/
+build/
+node_modules/
+out/
+
+# Testing files
+test/
+tests/
+__tests__/
+*.test.*
+*.spec.*
