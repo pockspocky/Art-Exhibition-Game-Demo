@@ -28,21 +28,34 @@ export class Start extends Phaser.Scene {
 
         ship.play('fly');
 
+        // Spaceship moves in a clockwise circle
+        const shipCircle = { angle: 0 };
         this.tweens.add({
-            targets: ship,
-            y: 200,
-            duration: 1500,
-            ease: 'Sine.inOut',
-            yoyo: true,
-            loop: -1
+            targets: shipCircle,
+            angle: Math.PI * 2,
+            duration: 3000,
+            ease: 'Linear',
+            repeat: -1,
+            onUpdate: () => {
+                const radius = 150;
+                ship.x = 640 + Math.cos(shipCircle.angle) * radius;
+                ship.y = 360 + Math.sin(shipCircle.angle) * radius;
+            }
         });
+
+        // Logo moves in a counter-clockwise circle
+        const logoCircle = { angle: 0 };
         this.tweens.add({
-            targets: logo,
-            y: 400,
-            duration: 1500,
-            ease: 'Sine.inOut',
-            yoyo: true,
-            loop: -1
+            targets: logoCircle,
+            angle: -Math.PI * 2,
+            duration: 3000,
+            ease: 'Linear',
+            repeat: -1,
+            onUpdate: () => {
+                const radius = 150;
+                logo.x = 640 + Math.cos(logoCircle.angle) * radius;
+                logo.y = 360 + Math.sin(logoCircle.angle) * radius;
+            }
         });
     }
 
