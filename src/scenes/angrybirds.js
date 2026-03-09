@@ -1,7 +1,7 @@
-export class Start extends Phaser.Scene {
+export class Abirds extends Phaser.Scene {
 
     constructor() {
-        super('Start');
+        super('ABirds');
     }
 
     preload() {
@@ -18,39 +18,6 @@ export class Start extends Phaser.Scene {
         const logo = this.add.image(640, 200, 'logo');
 
         const ship = this.add.sprite(640, 360, 'ship');
-
-        // Add text labels on left and right sides
-        const tetrisText = this.add.text(200, 360, 'Tetris', {
-            fontSize: '48px',
-            fill: '#ffffff',
-            fontStyle: 'bold'
-        }).setOrigin(0.5);
-
-        const angryBirdsText = this.add.text(1080, 360, 'Angry Birds', {
-            fontSize: '48px',
-            fill: 'rgba(255, 255, 255, 1)',
-            fontStyle: 'bold'
-        }).setOrigin(0.5);
-
-        // Make text objects interactive
-        tetrisText.setInteractive();
-        tetrisText.on('pointerdown', () => {
-            console.log(tetrisText.text);
-            this.scene.start('Tetris');
-        });
-
-        angryBirdsText.setInteractive();
-        angryBirdsText.on('pointerdown', () => {
-            console.log(angryBirdsText.text);
-            this.scene.start('ABirds');
-        });
-
-        // Add keyboard input for equals key to switch to Tetris scene
-        const equalsKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.PLUS);
-        equalsKey.on('down', () => {
-            this.scene.start('Tetris');
-            console.log("switched!");
-        });
 
         ship.anims.create({
             key: 'fly',
@@ -80,7 +47,7 @@ export class Start extends Phaser.Scene {
         const logoCircle = { angle: 0 };
         this.tweens.add({
             targets: logoCircle,
-            angle: -Math.PI * 2,
+            angle: Math.PI * 2,
             duration: 3000,
             ease: 'Linear',
             repeat: -1,
