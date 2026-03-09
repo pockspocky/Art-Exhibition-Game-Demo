@@ -1,4 +1,6 @@
 import { Start } from './scenes/Start.js';
+import { Tetris } from './scenes/tetris.js';
+import { Abirds } from './scenes/angrybirds.js';
 
 const config = {
     type: Phaser.AUTO,
@@ -10,7 +12,9 @@ const config = {
     backgroundColor: '#000000',
     pixelArt: false,
     scene: [
-        Start
+        Start,
+        Tetris,
+        Abirds
     ],
     scale: {
         mode: Phaser.Scale.FIT,
