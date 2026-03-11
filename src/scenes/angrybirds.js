@@ -29,20 +29,32 @@ export class Abirds extends Phaser.Scene {
 //小鸟可被鼠标拖动
         this.input.on("drag",(pointer, gameObject, dragX, dragY)=>{
 
-            gameObject.x = dragX;
-            gameObject.y = dragY;
+            if(gameObject === this.bird){
+
+                gameObject.setStatic(true);
+
+                gameObject.setPosition(dragX, dragY);
+
+    }
             
         });
 //小鸟会有弹弓效应
+
         this.input.on("dragend",(pointer, gameObject)=>{
+
+            if(gameObject === this.bird){
+
+                gameObject.setStatic(false);
 
             let dx = this.slingX - gameObject.x;
             let dy = this.slingY - gameObject.y;
 
-            gameObject.setVelocity({
-                x: dx * 0.0005,
-                y: dy * 0.0005
-            });
+            gameObject.setVelocity(
+                dx * 0.05,
+                dy * 0.05
+            );
+
+    }
         });
 //创建地面
         this.ground = this.matter.add.rectangle(640,700,1280,40,{
@@ -54,7 +66,7 @@ export class Abirds extends Phaser.Scene {
         this.bird.setFriction(0.005);
         this.bird.setBounce(0.8);
 //防止小鸟出屏幕
-
+        
         
     }
 
