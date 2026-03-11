@@ -42,7 +42,7 @@ export class Start extends Phaser.Scene {
         angryBirdsText.setInteractive();
         angryBirdsText.on('pointerdown', () => {
             console.log(angryBirdsText.text);
-            this.scene.start('ABirds');
+            this.scene.start('Abirds');
         });
 
         // Add keyboard input for equals key to switch to Tetris scene
