@@ -15,13 +15,15 @@ export class Abirds extends Phaser.Scene {
         this.bg = this.add.image(640,360, "bg");
         this.bg.setScale(1.1);
 
-        this.slingX = 200;
+        this.slingX = 300;
 
-        this.slingY = 400;
+        this.slingY = 500;
 
         this.sling = this.add.image(this.slingX, this.slingY,"sling");
+        this.sling.setScale(0.5);
 
         this.bird = this.matter.add.image(this.slingX, this.slingY, "bird");
+        this.bird.setScale(0.3);
 
         this.bird.setInteractive();
 
@@ -47,7 +49,7 @@ export class Abirds extends Phaser.Scene {
                 gameObject.setStatic(false);
 
             let dx = this.slingX - gameObject.x;
-            let dy = this.slingY - gameObject.y;
+            let dy = this.slingY - 150 - gameObject.y;
 
             gameObject.setVelocity(
                 dx * 0.05,
@@ -57,7 +59,7 @@ export class Abirds extends Phaser.Scene {
     }
         });
 //创建地面
-        this.ground = this.matter.add.rectangle(640,700,1280,40,{
+        this.ground = this.matter.add.rectangle(640,700,1280,160,{
             isStatic: true
         })
 
