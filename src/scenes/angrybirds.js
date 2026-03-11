@@ -1,7 +1,7 @@
-export class Start extends Phaser.Scene {
+export class Abirds extends Phaser.Scene {
 
     constructor() {
-        super('Start');
+        super('ABirds');
     }
 
     preload() {
@@ -31,7 +31,7 @@ export class Start extends Phaser.Scene {
 
             gameObject.x = dragX;
             gameObject.y = dragY;
-
+            
         });
 //小鸟会有弹弓效应
         this.input.on("dragend",(pointer, gameObject)=>{
@@ -39,19 +39,22 @@ export class Start extends Phaser.Scene {
             let dx = this.slingX - gameObject.x;
             let dy = this.slingY - gameObject.y;
 
-            gameObject.setVelocity(dx*3, dy*3);
+            gameObject.setVelocity({
+                x: dx * 0.0005,
+                y: dy * 0.0005
+            });
         });
 //创建地面
-        this.ground = this.matter.add.staticImage(640,700,null)
-            .setDisplaySize(1280,40)
-            .refreshBody();
+        this.ground = this.matter.add.rectangle(640,700,1280,40,{
+            isStatic: true
+        })
 
 //小鸟与地面碰撞
-        this.matter.add.collider(this.bird, this.ground);
 //设置反弹
-        this.bird.setBounce(0.7);
+        this.bird.setFriction(0.005);
+        this.bird.setBounce(0.8);
 //防止小鸟出屏幕
-        this.bird.setCollideWorldBounds(true);
+
         
     }
 
