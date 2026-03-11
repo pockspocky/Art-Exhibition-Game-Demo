@@ -1,66 +1,62 @@
-export class Abirds extends Phaser.Scene {
+export class Start extends Phaser.Scene {
 
     constructor() {
-        super('ABirds');
+        super('Start');
     }
 
     preload() {
-        this.load.image('background', 'assets/space.png');
-        this.load.image('logo', 'assets/phaser.png');
-
-        //  The ship sprite is CC0 from https://ansimuz.itch.io - check out his other work!
-        this.load.spritesheet('ship', 'assets/spaceship.png', { frameWidth: 176, frameHeight: 96 });
+       this.load.image("bird","assets/bird.png");
+       this.load.image("sling","assets/sling.png");
+       this.load.image('bg', 'assets/angrybird_background.png');
     }
 
     create() {
-        this.background = this.add.tileSprite(640, 360, 1280, 720, 'background');
 
-        const logo = this.add.image(640, 200, 'logo');
+        this.bg = this.add.image(640,360, "bg");
+        this.bg.setScale(1.1);
 
-        const ship = this.add.sprite(640, 360, 'ship');
+        this.slingX = 200;
 
-        ship.anims.create({
-            key: 'fly',
-            frames: this.anims.generateFrameNumbers('ship', { start: 0, end: 2 }),
-            frameRate: 15,
-            repeat: -1
+        this.slingY = 400;
+
+        this.sling = this.add.image(this.slingX, this.slingY,"sling");
+
+        this.bird = this.matter.add.image(this.slingX, this.slingY, "bird");
+
+        this.bird.setInteractive();
+
+        this.input.setDraggable(this.bird);
+//小鸟可被鼠标拖动
+        this.input.on("drag",(pointer, gameObject, dragX, dragY)=>{
+
+            gameObject.x = dragX;
+            gameObject.y = dragY;
+
         });
+//小鸟会有弹弓效应
+        this.input.on("dragend",(pointer, gameObject)=>{
 
-        ship.play('fly');
+            let dx = this.slingX - gameObject.x;
+            let dy = this.slingY - gameObject.y;
 
-        // Spaceship moves in a clockwise circle
-        const shipCircle = { angle: 0 };
-        this.tweens.add({
-            targets: shipCircle,
-            angle: Math.PI * 2,
-            duration: 3000,
-            ease: 'Linear',
-            repeat: -1,
-            onUpdate: () => {
-                const radius = 150;
-                ship.x = 640 + Math.cos(shipCircle.angle) * radius;
-                ship.y = 360 + Math.sin(shipCircle.angle) * radius;
-            }
+            gameObject.setVelocity(dx*3, dy*3);
         });
+//创建地面
+        this.ground = this.matter.add.staticImage(640,700,null)
+            .setDisplaySize(1280,40)
+            .refreshBody();
 
-        // Logo moves in a counter-clockwise circle
-        const logoCircle = { angle: 0 };
-        this.tweens.add({
-            targets: logoCircle,
-            angle: Math.PI * 2,
-            duration: 3000,
-            ease: 'Linear',
-            repeat: -1,
-            onUpdate: () => {
-                const radius = 150;
-                logo.x = 640 + Math.cos(logoCircle.angle) * radius;
-                logo.y = 360 + Math.sin(logoCircle.angle) * radius;
-            }
-        });
+//小鸟与地面碰撞
+        this.matter.add.collider(this.bird, this.ground);
+//设置反弹
+        this.bird.setBounce(0.7);
+//防止小鸟出屏幕
+        this.bird.setCollideWorldBounds(true);
+        
     }
 
     update() {
-        this.background.tilePositionX += 2;
+        
     }
     
 }
