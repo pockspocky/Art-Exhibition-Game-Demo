@@ -16,7 +16,6 @@ export class Tetris extends Phaser.Scene {
         this.load.image('block6', 'assets/TetrisBlocks/BlockSprite6.png')
         this.load.image('ground', 'assets/TetrisBlocks/Ground.png')
 
-
         //  The ship sprite is CC0 from https://ansimuz.itch.io - check out his other work!
         this.load.spritesheet('ship', 'assets/spaceship.png', { frameWidth: 176, frameHeight: 96 });
     }
