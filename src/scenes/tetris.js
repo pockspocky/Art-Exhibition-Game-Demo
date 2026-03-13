@@ -21,6 +21,8 @@ export class Tetris extends Phaser.Scene {
         this.load.spritesheet('ship', 'assets/spaceship.png', { frameWidth: 176, frameHeight: 96 });
     }
 
+    // block a onto black b
+
     create() {
 
         const background = this.make.image({
