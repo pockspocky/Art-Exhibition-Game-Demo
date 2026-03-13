@@ -22,6 +22,7 @@ export class Tetris extends Phaser.Scene {
     }
 
     // block a onto black b
+    // block c onto blockd d
 
     create() {
 
