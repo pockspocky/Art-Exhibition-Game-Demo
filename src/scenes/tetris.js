@@ -38,9 +38,8 @@ export class Tetris extends Phaser.Scene {
         // Game state
         this.currentBlock = null;
         this.isDropping = false;
+        this.isMoving = false;
         this.blockArr = [];
-        this.horizontalSpeed = 200;
-        this.movingRight = true;
 
         const ground = this.matter.add.sprite(640, 700, 'ground').setScale(10, 1).setStatic(true).setBounce(0.7);
 
@@ -71,15 +70,26 @@ export class Tetris extends Phaser.Scene {
             }
         });
 
-        // Pointer input (for clicking anywhere else)
+        // Global pointer down for dropping
         this.input.on('pointerdown', (pointer) => {
-            // Only drop if not clicking on the text buttons
             if (this.currentBlock && !this.isDropping) {
-                const clickedOnButton = spinText.getBounds().contains(pointer.x, pointer.y) || 
-                                       dropText.getBounds().contains(pointer.x, pointer.y);
-                if (!clickedOnButton) {
-                    this.dropBlock();
+                const clickedOnSpin = spinText.getBounds().contains(pointer.x, pointer.y);
+                const clickedOnDrop = dropText.getBounds().contains(pointer.x, pointer.y);
+                
+                if (!clickedOnSpin && !clickedOnDrop) {
+                    // Since the block has its own stopPropagation pointerdown,
+                    // if this global listener fires, it means we clicked outside buttons and the block.
+                    if (this.isMoving) {
+                        this.dropBlock();
+                    }
                 }
+            }
+        });
+
+        // Global pointer move to handle following
+        this.input.on('pointermove', (pointer) => {
+            if (this.currentBlock && !this.isDropping && this.isMoving) {
+                this.updateBlockPosition(pointer.x);
             }
         });
 
@@ -99,9 +109,25 @@ export class Tetris extends Phaser.Scene {
         this.currentBlock = this.matter.add.sprite(640, 100, `block${blockType}`);
         this.currentBlock.setStatic(true);
         this.currentBlock.setBounce(0.7);
+        this.currentBlock.setInteractive(); // Make it interactive
+        
+        // Handle specific click on the block
+        this.currentBlock.on('pointerdown', (pointer, localX, localY, event) => {
+            event.stopPropagation(); // Don't trigger the global pointerdown
+            if (!this.isDropping) {
+                if (!this.isMoving) {
+                    this.isMoving = true;
+                    this.updateBlockPosition(pointer.x);
+                } else {
+                    // If already moving and clicked, drop it
+                    this.dropBlock();
+                }
+            }
+        });
+
         this.blockArr.push(this.currentBlock);
         this.isDropping = false;
-        this.movingRight = true;
+        this.isMoving = false; // Reset movement
     }
 
     rotateBlock() {
@@ -110,6 +136,7 @@ export class Tetris extends Phaser.Scene {
 
     dropBlock() {
         this.isDropping = true;
+        this.isMoving = false; // Stop following the pointer
         this.currentBlock.setStatic(false);
         this.currentBlock.setVelocityX(0);
         
@@ -119,20 +146,23 @@ export class Tetris extends Phaser.Scene {
         });
     }
 
+    updateBlockPosition(x) {
+        if (!this.currentBlock) return;
+
+        let targetX = x;
+
+        // Clamp the position to keep the block within the screen bounds
+        const halfWidth = this.currentBlock.displayWidth / 2;
+        const minX = 80 + halfWidth;
+        const maxX = 1200 - halfWidth;
+        
+        if (targetX < minX) targetX = minX;
+        if (targetX > maxX) targetX = maxX;
+
+        this.currentBlock.x = targetX;
+    }
+
     update() {
-        if (this.currentBlock && !this.isDropping) {
-            // Move block horizontally
-            if (this.movingRight) {
-                this.currentBlock.x += this.horizontalSpeed * (1/60);
-                if (this.currentBlock.x >= 1200) {
-                    this.movingRight = false;
-                }
-            } else {
-                this.currentBlock.x -= this.horizontalSpeed * (1/60);
-                if (this.currentBlock.x <= 80) {
-                    this.movingRight = true;
-                }
-            }
-        }
+        // We handle movement in updateBlockPosition via pointer events now
     }
 }
