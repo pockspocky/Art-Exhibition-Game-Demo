@@ -40,6 +40,24 @@ export class Abirds extends Phaser.Scene {
     }
             
         });
+this.matter.world.on('collisionstart', (event) => {
+    event.pairs.forEach(pair => {
+        const { bodyA, bodyB } = pair;
+
+        // 获取碰撞的物体
+        const objA = bodyA.gameObject;
+        const objB = bodyB.gameObject;
+
+        // 检查是否是小鸟撞到了 science_room
+        const isHit = (objA === this.bird && objB?.texture?.key === 'science_room') ||
+                      (objB === this.bird && objA?.texture?.key === 'science_room');
+
+        if (isHit) {
+            const explosiveBlock = (objA === this.bird) ? objB : objA;
+            this.handleExplosion(explosiveBlock);
+        }
+    });
+});
 //小鸟会有弹弓效应
 
         this.input.on("dragend",(pointer, gameObject)=>{
@@ -71,7 +89,44 @@ export class Abirds extends Phaser.Scene {
         
         
     }
+// 复制这段代码放在 create 结束的大括号之后
+    handleExplosion(block) {
+        if (!block || !block.active) return;
 
+        const { x, y } = block;
+
+        // 1. 视觉效果：缩放并淡出
+        this.tweens.add({
+            targets: block,
+            scale: 2,
+            alpha: 0,
+            duration: 100,
+            onComplete: () => {
+                // 2. 物理冲击：炸飞半径 400 内的所有非静态物体
+                const explosionRadius = 400; 
+                const allBodies = this.matter.world.localWorld.bodies;
+
+                allBodies.forEach(body => {
+                    // 排除掉地面（isStatic）和小鸟本身
+                    if (body.gameObject && !body.isStatic && body.gameObject !== this.bird) {
+                        const dist = Phaser.Math.Distance.Between(x, y, body.position.x, body.position.y);
+                        
+                        if (dist < explosionRadius) {
+                            const angle = Phaser.Math.Angle.Between(x, y, body.position.x, body.position.y);
+                            const force = (1 - dist / explosionRadius) * 0.15; 
+
+                            this.matter.applyForce(body, {
+                                x: Math.cos(angle) * force,
+                                y: Math.sin(angle) * force
+                            });
+                        }
+                    }
+                });
+
+                block.destroy(); // 销毁方块
+            }
+        });
+    }
     update() {
         
     }

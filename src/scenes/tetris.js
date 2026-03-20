@@ -13,6 +13,7 @@ export class Tetris extends Phaser.Scene {
         this.load.image('block3', 'assets/TetrisBlocks/BlockSprite3.png')
         this.load.image('block4', 'assets/TetrisBlocks/BlockSprite4.png')
         this.load.image('block5', 'assets/TetrisBlocks/BlockSprite5.png')
+        this.load.image('science_room', 'assets/science_room.png');
         this.load.image('block6', 'assets/TetrisBlocks/BlockSprite6.png')
         this.load.image('ground', 'assets/TetrisBlocks/Ground.png')
 
@@ -20,6 +21,7 @@ export class Tetris extends Phaser.Scene {
         //  The ship sprite is CC0 from https://ansimuz.itch.io - check out his other work!
         this.load.spritesheet('ship', 'assets/spaceship.png', { frameWidth: 176, frameHeight: 96 });
     }
+
 
     create() {
 
@@ -102,14 +104,29 @@ export class Tetris extends Phaser.Scene {
 
         // Start the first block
         this.spawnBlock();
-    }
+    } 
 
     spawnBlock() {
         const blockType = Math.floor(Math.random() * 7);    
         this.currentBlock = this.matter.add.sprite(640, 100, `block${blockType}`);
         this.currentBlock.setStatic(true);
         this.currentBlock.setBounce(0.7);
-        this.currentBlock.setInteractive(); // Make it interactive
+        this.currentBlock.setInteractive(); 
+        spawnBlock() {
+    // 设定 20% 的概率出现 science_room 方块
+    const isSpecial = Math.random() < 0.2; 
+    const blockKey = isSpecial ? 'science_room' : `block${Math.floor(Math.random() * 7)}`;
+    
+    this.currentBlock = this.matter.add.sprite(640, 100, blockKey);
+    
+
+    if (isSpecial) {
+        this.currentBlock.setData('type', 'explosive');
+    }
+
+    this.currentBlock.setStatic(true);
+}
+// Make it interactive
         
         // Handle specific click on the block
         this.currentBlock.on('pointerdown', (pointer, localX, localY, event) => {
