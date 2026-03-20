@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en" class="antialiased">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acknowledgments</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;400;600;800&display=swap" rel="stylesheet">
+
+    <!-- Tailwind Config -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Manrope', 'sans-serif'],
+                        mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
+                    },
+                    colors: {
+                        bgDark: '#0a0a0a',
+                        textLight: '#f3f4f6',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Lenis basic styles */
+        html.lenis, html.lenis body {
+            height: auto;
+        }
+        .lenis.lenis-smooth {
+            scroll-behavior: auto !important;
+        }
+        .lenis.lenis-smooth [data-lenis-prevent] {
+            overscroll-behavior: contain;
+        }
+        .lenis.lenis-stopped {
+            overflow: hidden;
+        }
+        .lenis.lenis-scrolling iframe {
+            pointer-events: none;
+        }
+
+        /* Custom Global Styles */
+        body {
+            background-color: #0a0a0a;
+            color: #f3f4f6;
+            overflow-x: hidden;
+        }
+
+        /* Hero background layer */
+        .hero-bg {
+            position: absolute;
+            inset: 0;
+            background-image:
+                url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E"),
+                linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)),
+                url("projects-bg-1.webp");
+            background-size: auto, cover, cover;
+            background-position: center, center, center;
+            background-repeat: repeat, no-repeat, no-repeat;
+            z-index: 0;
+            transform-origin: center center;
+            will-change: transform;
+        }
+
+        ::-webkit-scrollbar {
+            width: 0px;
+            background: transparent;
+        }
+
+        /* Name Typography Effects — driven by JS proximity, not hover */
+        .name-item {
+            -webkit-text-stroke: 1px rgba(255, 255, 255, 0.2);
+            color: transparent;
+            transition: color 0.4s ease, -webkit-text-stroke 0.4s ease, opacity 0.4s ease, text-shadow 0.4s ease;
+        }
+
+        /* Golden glow for Roger Li */
+        .name-golden {
+            -webkit-text-stroke: 1px rgba(255, 200, 50, 0.3);
+            text-shadow:
+                0 0 20px rgba(255, 200, 50, 0.4),
+                0 0 40px rgba(255, 180, 30, 0.25),
+                0 0 80px rgba(255, 160, 10, 0.15);
+        }
+
+        /* Image section: crop bottom to hide watermark */
+        .image-reveal {
+            overflow: hidden;
+        }
+        .image-reveal img {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            /* shift image up slightly so the bottom (watermark) is cropped */
+            object-position: center top;
+        }
+
+        /* Hardware acceleration for smooth tracking */
+        .will-change-transform {
+            will-change: transform;
+        }
+    </style>
+</head>
+<body class="selection:bg-white selection:text-black">
+
+    <!-- Top Navigation -->
+    <nav class="fixed top-0 left-0 w-full p-6 md:p-12 flex justify-between items-center z-50 mix-blend-difference pointer-events-none">
+        <div class="text-xs tracking-[0.2em] uppercase font-semibold text-gray-400">Art-Exhibition-Game</div>
+        <div class="text-xs tracking-[0.2em] uppercase font-semibold text-gray-400">Scroll down &darr;</div>
+    </nav>
+
+    <main>
+        <!-- Hero Section -->
+        <section class="relative h-screen flex flex-col items-center justify-center overflow-hidden">
+            <!-- Background image layer (only on hero) -->
+            <div class="hero-bg" id="hero-bg"></div>
+            <div class="hero-content text-center z-10 px-4 will-change-transform">
+                <p class="text-gray-400 text-sm md:text-base tracking-[0.3em] uppercase mb-6 md:mb-8 font-light">
+                    A Small Project By
+                </p>
+                <h1 class="text-[12vw] md:text-[8vw] font-extrabold tracking-tighter leading-none mb-4 uppercase">
+                    Acknowledgments
+                </h1>
+                <p class="text-2xl md:text-4xl text-gray-300 font-semibold tracking-[0.15em] uppercase mt-4 md:mt-8">
+                    WAPrep
+                </p>
+                <p class="text-lg md:text-xl text-gray-500 font-light tracking-wide mt-3 md:mt-5">
+                    We tried our best. That counts, right?
+                </p>
+            </div>
+            
+            <div class="absolute bottom-0 w-full h-48 bg-gradient-to-t from-bgDark to-transparent z-20 pointer-events-none"></div>
+        </section>
+
+        <!-- Horizontal Scroll Section -->
+        <!-- h-[600vh] creates a tall scrollable area to hijack -->
+        <section id="horizontal-section" class="relative h-[900vh] w-full bg-bgDark z-30">
+            <!-- Sticky container that stays on screen while we scroll the 600vh area -->
+            <div class="sticky top-0 h-screen w-full flex flex-col justify-center overflow-hidden">
+                
+                <!-- Section Label -->
+                <div class="absolute top-1/4 md:top-1/3 left-6 md:left-12 text-xs md:text-sm text-gray-500 tracking-[0.3em] uppercase">
+                    The Team
+                </div>
+
+                <!-- The Horizontal Track -->
+                <div id="horizontal-track" class="flex items-center gap-16 md:gap-32 px-[50vw] w-max will-change-transform">
+                    <!-- Adjusted Text Sizes: text-[12vw] md:text-[10vw] lg:text-[8vw] -->
+                    <h2 class="name-item text-[12vw] md:text-[10vw] lg:text-[8vw] font-black uppercase tracking-tighter cursor-default whitespace-nowrap">Eric Zhong</h2>
+                    <h2 class="name-item text-[12vw] md:text-[10vw] lg:text-[8vw] font-black uppercase tracking-tighter cursor-default whitespace-nowrap">Kai Fu</h2>
+                    <h2 class="name-item text-[12vw] md:text-[10vw] lg:text-[8vw] font-black uppercase tracking-tighter cursor-default whitespace-nowrap">Samuel He</h2>
+                    <h2 class="name-item text-[12vw] md:text-[10vw] lg:text-[8vw] font-black uppercase tracking-tighter cursor-default whitespace-nowrap">Steven Wang</h2>
+                    <h2 class="name-item text-[12vw] md:text-[10vw] lg:text-[8vw] font-black uppercase tracking-tighter cursor-default whitespace-nowrap">Peter Huang</h2>
+                    <h2 class="name-item text-[12vw] md:text-[10vw] lg:text-[8vw] font-black uppercase tracking-tighter cursor-default whitespace-nowrap">Lucas Wang</h2>
+                    <h2 class="name-item text-[12vw] md:text-[10vw] lg:text-[8vw] font-black uppercase tracking-tighter cursor-default whitespace-nowrap">McQueen Song</h2>
+                    <h2 class="name-item name-golden text-[12vw] md:text-[10vw] lg:text-[8vw] font-black uppercase tracking-tighter cursor-default whitespace-nowrap">Roger Li</h2>
+                </div>
+            </div>
+        </section>
+
+        <!-- Image Reveal Section -->
+        <section id="image-section" class="relative h-[300vh] w-full z-35">
+            <div class="sticky top-0 h-screen w-full flex items-center justify-center overflow-hidden">
+                <div id="image-container" class="will-change-transform" style="width: 25%; opacity: 0; transform: translate3d(0, 80px, 0) scale(0.92);">
+                    <img src="BobCats.png" alt="BobCats" loading="lazy" style="width: 100%; height: auto; display: block;">
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer / Outro -->
+        <footer class="relative h-screen flex items-center justify-center bg-bgDark z-40">
+            <p class="text-neutral-500 text-sm md:text-base tracking-[0.2em] font-mono uppercase text-center px-4">
+                &copy; 2026. Somehow we shipped it.<br>
+                <span class="block mt-4 text-xs text-neutral-700">End of Roll</span>
+            </p>
+        </footer>
+    </main>
+
+    <!-- Lenis Library -->
+    <script src="https://unpkg.com/@studio-freight/lenis@1.0.42/dist/lenis.min.js"></script>
+    
+    <script>
+        // 1. Initialize Lenis Smooth Scroll
+        const lenis = new Lenis({
+            duration: 1.5, 
+            easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)), 
+            direction: 'vertical',
+            gestureDirection: 'vertical',
+            smooth: true,
+            mouseMultiplier: 1.2,
+            smoothTouch: false,
+            touchMultiplier: 2,
+            infinite: false,
+        });
+
+        function raf(time) {
+            lenis.raf(time);
+            requestAnimationFrame(raf);
+        }
+        requestAnimationFrame(raf);
+
+        // 2. Scroll Animations Logic
+        const heroContent = document.querySelector('.hero-content');
+        const horizontalSection = document.getElementById('horizontal-section');
+        const horizontalTrack = document.getElementById('horizontal-track');
+        const nameItems = Array.from(document.querySelectorAll('.name-item'));
+
+        // Arrays to store dynamic positioning data
+        let targetTranslations = [];
+        let scrollBreakpoints = [];
+
+        // Function to accurately calculate the center of each name dynamically
+        function calculatePositions() {
+            targetTranslations = [];
+            const windowCenter = window.innerWidth / 2;
+            
+            nameItems.forEach((item) => {
+                // Get the physical center of the text element relative to the track
+                const itemCenter = item.offsetLeft + (item.offsetWidth / 2);
+                // Calculate how much we need to translate the track to center this item on screen
+                targetTranslations.push(windowCenter - itemCenter);
+            });
+
+            // Evenly distribute breakpoints so each name gets equal scroll distance
+            const count = targetTranslations.length;
+            scrollBreakpoints = targetTranslations.map((_, i) => {
+                return count <= 1 ? 0 : i / (count - 1);
+            });
+        }
+
+        // Calculate positions on load and re-calculate on window resize
+        window.addEventListener('load', calculatePositions);
+        window.addEventListener('resize', calculatePositions);
+        // Fallback calculation just in case
+        calculatePositions();
+
+        // 3. Main scroll event hook
+        lenis.on('scroll', (e) => {
+            const scrollY = e.scroll;
+            const windowHeight = window.innerHeight;
+
+            // --- A. Hero Parallax + Background Zoom ---
+            const heroBg = document.getElementById('hero-bg');
+            if (scrollY < windowHeight) {
+                heroContent.style.transform = `translate3d(0, ${scrollY * 0.4}px, 0)`;
+                heroContent.style.opacity = 1 - (scrollY / windowHeight) * 1.5;
+                // Zoom background from 1.0 to 1.15 as you scroll down
+                const zoomProgress = scrollY / windowHeight;
+                const scale = 1 + zoomProgress * 0.15;
+                heroBg.style.transform = `scale(${scale})`;
+            }
+
+            // --- B. Horizontal Scroll Hijack with PERFECT Center Snapping ---
+            const rect = horizontalSection.getBoundingClientRect();
+            const startScroll = 0;
+            const maxScrollDistance = rect.height - windowHeight;
+            const endScroll = -maxScrollDistance;
+
+            if (rect.top <= startScroll && rect.top >= endScroll && targetTranslations.length > 0) {
+                // Linear Progress from 0 to 1
+                let linearProgress = rect.top / endScroll; 
+                linearProgress = Math.max(0, Math.min(1, linearProgress));
+                
+                // Find which segment (between which two names) we are currently in
+                let index = 0;
+                for (let i = 0; i < scrollBreakpoints.length - 1; i++) {
+                    if (linearProgress >= scrollBreakpoints[i] && linearProgress <= scrollBreakpoints[i + 1]) {
+                        index = i;
+                        break;
+                    }
+                }
+                if (linearProgress >= 1) index = scrollBreakpoints.length - 2;
+
+                const pStart = scrollBreakpoints[index];
+                const pEnd = scrollBreakpoints[index + 1];
+                
+                // Calculate local progress within this specific segment (0 to 1)
+                const t = (linearProgress - pStart) / (pEnd - pStart);
+                
+                // Apply Quintic Ease-In-Out (much more extreme snap to names)
+                const easedT = t < 0.5 ? 16 * t * t * t * t * t : 1 - Math.pow(-2 * t + 2, 5) / 2;
+                
+                // Mix linear and eased movement to prevent dead stops on the names
+                const mixRatio = 0.95; // 95% eased (strong snap), 5% linear (tiny glide)
+                const finalT = t * (1 - mixRatio) + easedT * mixRatio;
+                
+                // Interpolate exact pixel translation
+                const currentTranslate = targetTranslations[index] + finalT * (targetTranslations[index + 1] - targetTranslations[index]);
+                
+                horizontalTrack.style.transform = `translate3d(${currentTranslate}px, 0, 0)`;
+
+                // --- C. Proximity-based name highlighting ---
+                const screenCenter = window.innerWidth / 2;
+                nameItems.forEach((item) => {
+                    const itemRect = item.getBoundingClientRect();
+                    const itemCenter = itemRect.left + itemRect.width / 2;
+                    const dist = Math.abs(itemCenter - screenCenter);
+                    const maxDist = window.innerWidth * 0.35;
+                    // 1 when centered, 0 when far away
+                    const proximity = Math.max(0, 1 - dist / maxDist);
+                    const alpha = Math.pow(proximity, 0.4);
+                    const isGolden = item.classList.contains('name-golden');
+                    // Stroke fades out as name gets whiter
+                    const strokeAlpha = 0.2 * (1 - alpha);
+                    if (isGolden) {
+                        // Gold color with radiant glow
+                        item.style.color = `rgba(255, 210, 60, ${alpha})`;
+                        item.style.webkitTextStroke = `1px rgba(255, 200, 50, ${strokeAlpha > 0 ? strokeAlpha + 0.1 : 0})`;
+                        const glowIntensity = alpha;
+                        item.style.textShadow = `0 0 ${20 + glowIntensity * 40}px rgba(255, 200, 50, ${glowIntensity * 0.6}), 0 0 ${40 + glowIntensity * 60}px rgba(255, 180, 30, ${glowIntensity * 0.35}), 0 0 ${80 + glowIntensity * 80}px rgba(255, 160, 10, ${glowIntensity * 0.2})`;
+                    } else {
+                        item.style.color = `rgba(255, 255, 255, ${alpha})`;
+                        item.style.webkitTextStroke = `1px rgba(255, 255, 255, ${strokeAlpha})`;
+                        item.style.textShadow = 'none';
+                    }
+                });
+            } else if (rect.top > startScroll && targetTranslations.length > 0) {
+                // Before horizontal section
+                horizontalTrack.style.transform = `translate3d(${targetTranslations[0]}px, 0, 0)`;
+            } else if (rect.top < endScroll && targetTranslations.length > 0) {
+                // After horizontal section
+                horizontalTrack.style.transform = `translate3d(${targetTranslations[targetTranslations.length - 1]}px, 0, 0)`;
+            }
+
+            // --- D. Image Reveal with non-linear scroll ---
+            const imgSection = document.getElementById('image-section');
+            const imgContainer = document.getElementById('image-container');
+            if (imgSection && imgContainer) {
+                const imgRect = imgSection.getBoundingClientRect();
+                const imgMaxScroll = imgRect.height - windowHeight;
+                const imgEndScroll = -imgMaxScroll;
+
+                if (imgRect.top <= 0 && imgRect.top >= imgEndScroll) {
+                    let imgProgress = imgRect.top / imgEndScroll;
+                    imgProgress = Math.max(0, Math.min(1, imgProgress));
+                    
+                    // Quintic ease-out for smooth reveal
+                    const easedImg = 1 - Math.pow(1 - imgProgress, 5);
+                    
+                    const opacity = easedImg;
+                    const translateY = 80 * (1 - easedImg);
+                    const scale = 0.92 + 0.08 * easedImg;
+                    
+                    imgContainer.style.opacity = opacity;
+                    imgContainer.style.transform = `translate3d(0, ${translateY}px, 0) scale(${scale})`;
+                } else if (imgRect.top > 0) {
+                    imgContainer.style.opacity = 0;
+                    imgContainer.style.transform = `translate3d(0, 80px, 0) scale(0.92)`;
+                } else {
+                    imgContainer.style.opacity = 1;
+                    imgContainer.style.transform = `translate3d(0, 0, 0) scale(1)`;
+                }
+            }
+        });
+    </script>
+</body>
+</html>
