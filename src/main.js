@@ -1,6 +1,7 @@
-import { Start } from './scenes/Start.js';
+import MenuScene from './scenes/MenuScene.js';
 import { Tetris } from './scenes/tetris.js';
 import { Abirds } from './scenes/angrybirds.js';
+import { MergedScene } from './scenes/merged.js';
 
 const config = {
     type: Phaser.AUTO,
@@ -18,7 +19,7 @@ const config = {
          },
          gravity: {
              x: 0,
-             y: 0.8,
+             y: 0.4,
          },
         //  setBounds: {
         //      x: 0,
@@ -49,9 +50,10 @@ const config = {
     backgroundColor: '#f0f0f0ff',
     pixelArt: false,
     scene: [
-        Start,
+        MenuScene,
         Tetris,
-        Abirds
+        Abirds,
+        MergedScene
     ],
     scale: {
         mode: Phaser.Scale.FIT,
