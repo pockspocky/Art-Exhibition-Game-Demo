@@ -382,7 +382,7 @@ export default class MenuScene extends Phaser.Scene {
 
   handleStartGame() {
     console.log('Start Game');
-    this.scene.start('MergedScene', { blockLimit: 8, birdCount: 5, slingshotOffsetX: 300 });
+    this.scene.start('MergedScene', { blockLimit: 25, birdCount: 5, slingshotOffsetX: 300 });
   }
 
 }
