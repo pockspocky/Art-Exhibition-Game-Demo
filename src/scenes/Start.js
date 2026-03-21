@@ -6,7 +6,7 @@ export class Start extends Phaser.Scene {
 
     preload() {
         this.load.image('background', 'assets/space.png');
-        this.load.image('logo', 'assets/phaser.png');        
+        this.load.image('phaser', 'assets/phaser.png');
 
         //  The ship sprite is CC0 from https://ansimuz.itch.io - check out his other work!
         this.load.spritesheet('ship', 'assets/spaceship.png', { frameWidth: 176, frameHeight: 96 });
@@ -15,7 +15,7 @@ export class Start extends Phaser.Scene {
     create() {
         this.background = this.add.tileSprite(640, 360, 1280, 720, 'background');
 
-        const logo = this.add.image(640, 200, 'logo');
+        const logo = this.add.image(640, 200, 'phaser').setScale(0.1);
 
         const ship = this.add.sprite(640, 360, 'ship');
 
@@ -43,6 +43,18 @@ export class Start extends Phaser.Scene {
         angryBirdsText.on('pointerdown', () => {
             console.log(angryBirdsText.text);
             this.scene.start('ABirds');
+        });
+
+        const mergedText = this.add.text(640, 440, 'Merged Mode', {
+            fontSize: '48px',
+            fill: '#ffffff',
+            fontStyle: 'bold'
+        }).setOrigin(0.5);
+
+        mergedText.setInteractive();
+        mergedText.on('pointerdown', () => {
+            console.log(mergedText.text);
+            this.scene.start('MergedScene', { blockLimit: 5, birdCount: 7, slingshotOffsetX: 300 });
         });
 
         // Add keyboard input for equals key to switch to Tetris scene

@@ -16,9 +16,6 @@ export class Tetris extends Phaser.Scene {
         this.load.image('block6', 'assets/TetrisBlocks/BlockSprite6.png')
         this.load.image('ground', 'assets/TetrisBlocks/Ground.png')
 
-
-        //  The ship sprite is CC0 from https://ansimuz.itch.io - check out his other work!
-        this.load.spritesheet('ship', 'assets/spaceship.png', { frameWidth: 176, frameHeight: 96 });
     }
 
     create() {
@@ -40,14 +37,13 @@ export class Tetris extends Phaser.Scene {
         this.isDropping = false;
         this.isMoving = false;
         this.blockArr = [];
-        this.stickyPairs = new Set();
         this.pendingSticky = new Map();
-        this.cheeseLinks = [];
+        this.stickingDelay = 10;
+        this.stickyGroups = [];
 
-        this.createCheeseLinkTexture();
         this.matter.world.engine.enableSleeping = true;
 
-        const ground = this.matter.add.sprite(640, 700, 'ground').setScale(10, 1).setStatic(true).setBounce(0.7);
+        const ground = this.matter.add.sprite(640, 700, 'ground').setScale(10, 1).setStatic(true).setBounce(0);
 
         // UI Text buttons
         const spinText = this.add.text(100, 50, 'Spin', {
@@ -120,11 +116,13 @@ export class Tetris extends Phaser.Scene {
 
     spawnBlock() {
         const blockType = Math.floor(Math.random() * 7);    
-        this.currentBlock = this.matter.add.sprite(640, 100, `block${blockType}`);
+        this.currentBlock = this.matter.add.sprite(640, 100, `block${blockType}`).setScale(1.2);
         this.currentBlock.setStatic(true);
-        this.currentBlock.setBounce(0.7);
+        this.currentBlock.setBounce(0);
         this.currentBlock.setInteractive(); // Make it interactive
         this.currentBlock.setSleepThreshold(0);
+        this.currentBlock.setMass(0.0001);
+        this.currentBlock.setFriction(0.0001);
         
         // Handle specific click on the block
         this.currentBlock.on('pointerdown', (pointer, localX, localY, event) => {
@@ -179,19 +177,14 @@ export class Tetris extends Phaser.Scene {
     }
 
     update() {
-        this.updateCheeseLinks();
+        this.syncStickyGroups();
     }
 
-    createCheeseLinkTexture() {
-        const g = this.make.graphics({ x: 0, y: 0, add: false });
-        g.fillStyle(0xffd36b, 1);
-        g.fillRoundedRect(0, 0, 24, 16, 6);
-        g.fillStyle(0xf0b24a, 1);
-        g.fillCircle(7, 6, 2);
-        g.fillCircle(14, 10, 3);
-        g.fillCircle(19, 5, 1.5);
-        g.generateTexture('cheese_link', 24, 16);
-        g.destroy();
+    syncStickyGroups() {
+        for (const group of this.stickyGroups) {
+            group.container.setPosition(group.compoundBody.position.x, group.compoundBody.position.y);
+            group.container.setRotation(group.compoundBody.angle);
+        }
     }
 
     isBlockSprite(body) {
@@ -205,38 +198,276 @@ export class Tetris extends Phaser.Scene {
         return body.gameObject.texture.key === 'block1';
     }
 
+    findGroupForBody(body) {
+        if (!body) return null;
+        const id = body.id;
+        for (const group of this.stickyGroups) {
+            // Match against the compound body itself
+            if (group.compoundBody.id === id) return group;
+            // Match against compound body parts
+            if (group.compoundBody.parts) {
+                for (const part of group.compoundBody.parts) {
+                    if (part.id === id) return group;
+                }
+            }
+            // Match against stored member bodyId values
+            for (const member of group.members) {
+                if (member.bodyId === id) return group;
+            }
+        }
+        return null;
+    }
+
+    buildCompoundBody(memberBodies) {
+        const Matter = Phaser.Physics.Matter.Matter;
+
+        // Clone each body's vertices as parts, positioned at their world coordinates
+        const parts = memberBodies.map(b => {
+            const clone = Matter.Bodies.rectangle(
+                b.position.x, b.position.y,
+                b.bounds.max.x - b.bounds.min.x,
+                b.bounds.max.y - b.bounds.min.y
+            );
+            return clone;
+        });
+
+        // Matter.Body.create auto-calculates center of mass from parts
+        // Don't override with setPosition — let Matter decide the center
+        const compound = Matter.Body.create({ parts });
+        return compound;
+    }
+
+    createStickyGroup(bodyA, bodyB) {
+        const Matter = Phaser.Physics.Matter.Matter;
+
+        // Determine which body is the initiator (block1)
+        const aIsInitiator = this.isBlockSprite1(bodyA);
+        const initiatorBody = aIsInitiator ? bodyA : bodyB;
+        const otherBody = aIsInitiator ? bodyB : bodyA;
+
+        const spriteA = bodyA.gameObject;
+        const spriteB = bodyB.gameObject;
+        const initiatorSprite = aIsInitiator ? spriteA : spriteB;
+
+        // Build compound body — its position is auto-calculated by Matter from parts
+        const compoundBody = this.buildCompoundBody([bodyA, bodyB]);
+
+        // Use the compound body's actual center as the container origin
+        const cx = compoundBody.position.x;
+        const cy = compoundBody.position.y;
+
+        // Create Phaser Container at the compound body center
+        const container = this.add.container(cx, cy);
+
+        // Convert each body's physics position to container-local offset and add sprite as child
+        const members = [initiatorBody, otherBody].map(body => {
+            const sprite = body.gameObject;
+            const offsetX = body.position.x - cx;
+            const offsetY = body.position.y - cy;
+            sprite.x = offsetX;
+            sprite.y = offsetY;
+            container.add(sprite);
+            return {
+                sprite,
+                bodyId: body.id,
+                offsetX,
+                offsetY,
+                bodyWidth: body.bounds.max.x - body.bounds.min.x,
+                bodyHeight: body.bounds.max.y - body.bounds.min.y
+            };
+        });
+
+        // Remove individual Matter.js bodies from the world and add compound body
+        this.matter.world.remove(bodyA);
+        this.matter.world.remove(bodyB);
+        this.matter.world.add(compoundBody);
+
+        // Store the new StickyGroup object
+        const group = {
+            container,
+            compoundBody,
+            initiatorBodyId: initiatorBody.id,
+            initiatorSprite,
+            members
+        };
+
+        this.stickyGroups.push(group);
+        return group;
+    }
+
+    extendStickyGroup(group, newBody) {
+        // Enforce max group size of 3
+        if (group.members.length >= 3) return;
+
+        const Matter = Phaser.Physics.Matter.Matter;
+        const container = group.container;
+        const newSprite = newBody.gameObject;
+        const oldContainerX = container.x;
+        const oldContainerY = container.y;
+
+        // Compute world positions of existing members before any changes
+        const existingWorldPositions = group.members.map(member => ({
+            member,
+            worldX: oldContainerX + member.offsetX,
+            worldY: oldContainerY + member.offsetY
+        }));
+
+        // New block's world position
+        const newWorldPosX = newBody.position.x;
+        const newWorldPosY = newBody.position.y;
+
+        // Rebuild compound body from all members + new body
+        // Create temporary body representations for existing members using stored body dimensions
+        const tempBodies = existingWorldPositions.map(({ member, worldX, worldY }) => {
+            return Matter.Bodies.rectangle(
+                worldX, worldY,
+                member.bodyWidth,
+                member.bodyHeight
+            );
+        });
+
+        // Add the new body (still has its world position)
+        tempBodies.push(newBody);
+
+        // Build the new compound body
+        const newCompoundBody = this.buildCompoundBody(tempBodies);
+
+        // Remove old compound body from world and add new one
+        this.matter.world.remove(group.compoundBody);
+        this.matter.world.remove(newBody);
+        this.matter.world.add(newCompoundBody);
+
+        // Update container position to new compound body centroid
+        const newCX = newCompoundBody.position.x;
+        const newCY = newCompoundBody.position.y;
+        container.setPosition(newCX, newCY);
+
+        // Recalculate all existing member offsets relative to new container position
+        for (const { member, worldX, worldY } of existingWorldPositions) {
+            member.offsetX = worldX - newCX;
+            member.offsetY = worldY - newCY;
+            member.sprite.x = member.offsetX;
+            member.sprite.y = member.offsetY;
+        }
+
+        // Add new sprite to container at its local offset
+        const newOffsetX = newWorldPosX - newCX;
+        const newOffsetY = newWorldPosY - newCY;
+        newSprite.x = newOffsetX;
+        newSprite.y = newOffsetY;
+        container.add(newSprite);
+
+        // Add new member to the group
+        group.members.push({
+            sprite: newSprite,
+            bodyId: newBody.id,
+            offsetX: newOffsetX,
+            offsetY: newOffsetY,
+            bodyWidth: newBody.bounds.max.x - newBody.bounds.min.x,
+            bodyHeight: newBody.bounds.max.y - newBody.bounds.min.y
+        });
+
+        group.compoundBody = newCompoundBody;
+    }
+
+    getPairKeyId(body) {
+        // For compound body parts, use the parent body's ID so cancelPendingSticky can match
+        if (body.parent && body.parent !== body) {
+            return body.parent.id;
+        }
+        return body.id;
+    }
+
     handleStickyCollision(event) {
         const pairs = event.pairs || [];
         for (const pair of pairs) {
             const bodyA = pair.bodyA;
             const bodyB = pair.bodyB;
 
-            if (!this.isBlockSprite(bodyA) || !this.isBlockSprite(bodyB)) {
-                continue;
+            // 1. Skip if either body's gameObject is the block currently being positioned
+            // (before it's dropped). Once dropped, it should participate in sticking.
+            if (this.currentBlock && !this.isDropping) {
+                if (bodyA.gameObject === this.currentBlock || bodyB.gameObject === this.currentBlock) {
+                    continue;
+                }
             }
 
-            const aIsSticky = this.isBlockSprite1(bodyA);
-            const bIsSticky = this.isBlockSprite1(bodyB);
-            if (!aIsSticky && !bIsSticky) {
+            // 2. Check group membership for both bodies
+            const groupA = this.findGroupForBody(bodyA);
+            const groupB = this.findGroupForBody(bodyB);
+
+            let freeBody = null;
+            let existingGroup = null;
+
+            if (groupA && groupB) {
+                // Both bodies are in groups — skip
                 continue;
+            } else if (groupA || groupB) {
+                // One body is in a group, the other should be free
+                existingGroup = groupA || groupB;
+                freeBody = groupA ? bodyB : bodyA;
+
+                // After compound body creation, Matter.js reports the compound body
+                // (or its parts) in collisions — we cannot distinguish which original
+                // member's shape was hit. The group was initiated by a block1, so any
+                // collision with the compound body is treated as a valid extension
+                // trigger, provided the group has room to grow.
+                if (existingGroup.members.length >= 3) {
+                    continue;
+                }
+
+                // The other body must be a free block sprite (not in any group)
+                if (!this.isBlockSprite(freeBody)) {
+                    continue;
+                }
+            } else {
+                // Neither body is in a group: both must be block sprites, at least one must be block1
+                if (!this.isBlockSprite(bodyA) || !this.isBlockSprite(bodyB)) {
+                    continue;
+                }
+                if (!this.isBlockSprite1(bodyA) && !this.isBlockSprite1(bodyB)) {
+                    continue;
+                }
             }
 
-            const idA = Math.min(bodyA.id, bodyB.id);
-            const idB = Math.max(bodyA.id, bodyB.id);
-            const pairKey = `${idA}-${idB}`;
-            if (this.stickyPairs.has(pairKey)) {
-                continue;
-            }
+            // 3. Compute pair key using compound body parent IDs
+            const idA = this.getPairKeyId(bodyA);
+            const idB = this.getPairKeyId(bodyB);
+            const pairKey = `${Math.min(idA, idB)}-${Math.max(idA, idB)}`;
+
+            // No duplicate pending timer for this pair
             if (this.pendingSticky.has(pairKey)) {
                 continue;
             }
 
-            const delayMs = 1000;
+            // 4. Start delayed sticking timer
             const bodyRefA = bodyA;
             const bodyRefB = bodyB;
-            const timer = this.time.delayedCall(delayMs, () => {
+            const capturedGroup = existingGroup;
+            const capturedFreeBody = freeBody;
+
+            const timer = this.time.delayedCall(this.stickingDelay, () => {
                 this.pendingSticky.delete(pairKey);
-                this.createFaceStick(bodyRefA, bodyRefB, pairKey);
+
+                // Re-validate that both bodies/sprites still exist
+                if (!bodyRefA.gameObject || !bodyRefB.gameObject) {
+                    return;
+                }
+
+                if (capturedGroup) {
+                    // Extending an existing group — re-validate the free body
+                    if (!capturedFreeBody.gameObject) {
+                        return;
+                    }
+                    // Re-check group size (may have changed since timer started)
+                    if (capturedGroup.members.length >= 3) {
+                        return;
+                    }
+                    this.extendStickyGroup(capturedGroup, capturedFreeBody);
+                } else {
+                    // Creating a new group
+                    this.createStickyGroup(bodyRefA, bodyRefB);
+                }
             });
             this.pendingSticky.set(pairKey, timer);
         }
@@ -247,9 +478,9 @@ export class Tetris extends Phaser.Scene {
         for (const pair of pairs) {
             const bodyA = pair.bodyA;
             const bodyB = pair.bodyB;
-            const idA = Math.min(bodyA.id, bodyB.id);
-            const idB = Math.max(bodyA.id, bodyB.id);
-            const pairKey = `${idA}-${idB}`;
+            const idA = this.getPairKeyId(bodyA);
+            const idB = this.getPairKeyId(bodyB);
+            const pairKey = `${Math.min(idA, idB)}-${Math.max(idA, idB)}`;
             const timer = this.pendingSticky.get(pairKey);
             if (timer) {
                 timer.remove(false);
@@ -258,125 +489,5 @@ export class Tetris extends Phaser.Scene {
         }
     }
 
-    createFaceStick(bodyA, bodyB, pairKey) {
-        if (this.stickyPairs.has(pairKey)) return;
 
-        if (!this.isBlockSprite(bodyA) || !this.isBlockSprite(bodyB)) return;
-
-        const Matter = Phaser.Physics.Matter.Matter;
-        const collisions = Matter.Query.collides(bodyA, [bodyB]);
-        if (!collisions || collisions.length === 0) return;
-        const collision = collisions[0];
-
-        const supportsRaw = collision.supports || [];
-        const supports = supportsRaw.filter((p) => p && Number.isFinite(p.x) && Number.isFinite(p.y));
-
-        let normal = collision.normal;
-        if (!normal || !Number.isFinite(normal.x) || !Number.isFinite(normal.y)) {
-            const dx = bodyB.position.x - bodyA.position.x;
-            const dy = bodyB.position.y - bodyA.position.y;
-            const len = Math.hypot(dx, dy) || 1;
-            normal = { x: dx / len, y: dy / len };
-        }
-        const tangent = { x: -normal.y, y: normal.x };
-
-        const sizeA = Math.min(bodyA.bounds.max.x - bodyA.bounds.min.x, bodyA.bounds.max.y - bodyA.bounds.min.y);
-        const sizeB = Math.min(bodyB.bounds.max.x - bodyB.bounds.min.x, bodyB.bounds.max.y - bodyB.bounds.min.y);
-        const offset = Math.max(10, Math.min(sizeA, sizeB) * 0.35);
-
-        let pStart;
-        let pEnd;
-        if (supports.length >= 2) {
-            pStart = supports[0];
-            pEnd = supports[1];
-        } else {
-            const base = supports.length === 1
-                ? supports[0]
-                : { x: (bodyA.position.x + bodyB.position.x) * 0.5, y: (bodyA.position.y + bodyB.position.y) * 0.5 };
-            pStart = { x: base.x + tangent.x * offset, y: base.y + tangent.y * offset };
-            pEnd = { x: base.x - tangent.x * offset, y: base.y - tangent.y * offset };
-        }
-
-        const pointCount = 50;
-        const pointsA = [];
-        const pointsB = [];
-        const constraints = [];
-
-        for (let i = 0; i < pointCount; i++) {
-            const t = pointCount === 1 ? 0.5 : i / (pointCount - 1);
-            const px = pStart.x + (pEnd.x - pStart.x) * t;
-            const py = pStart.y + (pEnd.y - pStart.y) * t;
-
-            const pointA = { x: px - bodyA.position.x, y: py - bodyA.position.y };
-            const pointB = { x: px - bodyB.position.x, y: py - bodyB.position.y };
-
-            pointsA.push(pointA);
-            pointsB.push(pointB);
-
-            constraints.push(this.matter.add.constraint(bodyA, bodyB, 0, 1.0, {
-                pointA,
-                pointB,
-                damping: 0.8,
-            }));
-
-        }
-
-        bodyA.friction = Math.max(bodyA.friction || 0, 0.9);
-        bodyB.friction = Math.max(bodyB.friction || 0, 0.9);
-        bodyA.frictionAir = Math.max(bodyA.frictionAir || 0, 0.05);
-        bodyB.frictionAir = Math.max(bodyB.frictionAir || 0, 0.05);
-        bodyA.sleepThreshold = Math.max(bodyA.sleepThreshold || 0, 60);
-        bodyB.sleepThreshold = Math.max(bodyB.sleepThreshold || 0, 60);
-
-        const sprites = [];
-        const spriteCount = 3;
-        for (let i = 0; i < spriteCount; i++) {
-            const t = spriteCount === 1 ? 0.5 : i / (spriteCount - 1);
-            const px = pStart.x + (pEnd.x - pStart.x) * t;
-            const py = pStart.y + (pEnd.y - pStart.y) * t;
-            const linkSprite = this.add.image(px, py, 'cheese_link');
-            linkSprite.setDepth(2);
-            sprites.push({ pointA: { x: px - bodyA.position.x, y: py - bodyA.position.y }, pointB: { x: px - bodyB.position.x, y: py - bodyB.position.y }, sprite: linkSprite });
-        }
-        const faceAngle = Phaser.Math.Angle.Between(pStart.x, pStart.y, pEnd.x, pEnd.y);
-        for (const s of sprites) {
-            s.sprite.setRotation(faceAngle);
-        }
-
-        this.cheeseLinks.push({
-            bodyA,
-            bodyB,
-            pointsA,
-            pointsB,
-            sprites,
-            constraints,
-        });
-
-        this.stickyPairs.add(pairKey);
-    }
-
-    updateCheeseLinks() {
-        for (const link of this.cheeseLinks) {
-            if (!link.pointsA || link.pointsA.length === 0) continue;
-
-            const firstA = link.pointsA[0];
-            const lastA = link.pointsA[link.pointsA.length - 1];
-            const ax0 = link.bodyA.position.x + firstA.x;
-            const ay0 = link.bodyA.position.y + firstA.y;
-            const ax1 = link.bodyA.position.x + lastA.x;
-            const ay1 = link.bodyA.position.y + lastA.y;
-            const faceAngle = Phaser.Math.Angle.Between(ax0, ay0, ax1, ay1);
-
-            for (const s of link.sprites) {
-                const ax = link.bodyA.position.x + s.pointA.x;
-                const ay = link.bodyA.position.y + s.pointA.y;
-                const bx = link.bodyB.position.x + s.pointB.x;
-                const by = link.bodyB.position.y + s.pointB.y;
-                s.sprite.x = (ax + bx) * 0.5;
-                s.sprite.y = (ay + by) * 0.5;
-                s.sprite.rotation = faceAngle;
-            }
-
-        }
-    }
 }
